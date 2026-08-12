@@ -1,5 +1,6 @@
 package mal_productivity.client;
 
+import mal_productivity.dto.GitHubDeployment;
 import mal_productivity.dto.GitHubPullRequest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -45,5 +46,16 @@ public class GitHubClient {
         }
 
         return response.workflowRuns();
+    }
+
+    public List<GitHubDeployment> getDeployments(String owner, String repo) {
+
+        List<GitHubDeployment> response = restClient.get()
+                .uri("/repos/{owner}/{repo}/deployments?per_page=100",
+                        owner, repo)
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
+
+        return response == null ? List.of() : response;
     }
 }

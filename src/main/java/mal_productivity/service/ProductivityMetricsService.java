@@ -1,6 +1,7 @@
 package mal_productivity.service;
 
 import mal_productivity.client.GitHubClient;
+import mal_productivity.dto.GitHubDeployment;
 import mal_productivity.dto.GitHubPullRequest;
 import mal_productivity.dto.GitHubWorkflowRun;
 import mal_productivity.dto.ProductivityMetrics;
@@ -27,42 +28,54 @@ public class ProductivityMetricsService {
         List<GitHubWorkflowRun> workflowRuns =
                 gitHubClient.getWorkflowRuns(owner, repo);
 
+        List<GitHubDeployment> deployments =
+                gitHubClient.getDeployments(owner, repo);
+
         OffsetDateTime sevenDaysAgo = OffsetDateTime.now().minusDays(7);
 
-        long deployments = workflowRuns.stream()
-                .filter(run -> "completed".equals(run.status()))
-                .filter(run -> "success".equals(run.conclusion()))
-                .filter(run -> run.updatedAt() != null)
-                .filter(run -> run.updatedAt().isAfter(sevenDaysAgo))
+        long deploymentsLast7Days = deployments.stream()
+                .filter(deployment -> deployment.createdAt() != null)
+                .filter(deployment ->
+                        deployment.createdAt().isAfter(sevenDaysAgo))
                 .count();
 
         List<GitHubPullRequest> mergedPrs = pullRequests.stream()
                 .filter(pr -> pr.mergedAt() != null)
                 .toList();
 
-        double averageLeadTime = mergedPrs.stream()
+        double averageLeadTimeHours = mergedPrs.stream()
                 .filter(pr -> pr.createdAt() != null)
                 .mapToLong(pr ->
-                        Duration.between(pr.createdAt(), pr.mergedAt()).toMinutes())
+                        Duration.between(
+                                pr.createdAt(),
+                                pr.mergedAt()
+                        ).toMinutes())
                 .average()
                 .orElse(0.0) / 60.0;
 
-        double averageReviewTime = mergedPrs.stream()
-                .filter(pr -> pr.createdAt() != null && pr.updatedAt() != null)
-                .mapToLong(pr ->
-                        Duration.between(pr.createdAt(), pr.updatedAt()).toMinutes())
-                .average()
-                .orElse(0.0) / 60.0;
-
-        long mergedLast7Days = mergedPrs.stream()
-                .filter(pr -> pr.mergedAt().isAfter(sevenDaysAgo))
+        long mergedPullRequestsLast7Days = mergedPrs.stream()
+                .filter(pr ->
+                        pr.mergedAt().isAfter(sevenDaysAgo))
+                .count();
+        
+        long completedRuns = workflowRuns.stream()
+                .filter(run -> "completed".equals(run.status()))
                 .count();
 
+        long successfulRuns = workflowRuns.stream()
+                .filter(run -> "completed".equals(run.status()))
+                .filter(run -> "success".equals(run.conclusion()))
+                .count();
+
+        double ciSuccessRate = completedRuns == 0
+                ? 0.0
+                : ((double) successfulRuns / completedRuns) * 100;
+
         return new ProductivityMetrics(
-                deployments,
-                round(averageLeadTime),
-                round(averageReviewTime),
-                mergedLast7Days
+                deploymentsLast7Days,
+                round(averageLeadTimeHours),
+                mergedPullRequestsLast7Days,
+                round(ciSuccessRate)
         );
     }
 

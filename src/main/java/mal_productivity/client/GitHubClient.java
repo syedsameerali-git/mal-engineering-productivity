@@ -4,6 +4,8 @@ import mal_productivity.dto.GitHubPullRequest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import mal_productivity.dto.GitHubWorkflowRun;
+import mal_productivity.dto.GitHubWorkflowRunsResponse;
 
 import java.util.List;
 
@@ -28,5 +30,20 @@ public class GitHubClient {
                 .body(new ParameterizedTypeReference<>() {});
 
         return response == null ? List.of() : response;
+    }
+
+    public List<GitHubWorkflowRun> getWorkflowRuns(String owner, String repo) {
+
+        GitHubWorkflowRunsResponse response = restClient.get()
+                .uri("/repos/{owner}/{repo}/actions/runs?per_page=100",
+                        owner, repo)
+                .retrieve()
+                .body(GitHubWorkflowRunsResponse.class);
+
+        if (response == null || response.workflowRuns() == null) {
+            return List.of();
+        }
+
+        return response.workflowRuns();
     }
 }

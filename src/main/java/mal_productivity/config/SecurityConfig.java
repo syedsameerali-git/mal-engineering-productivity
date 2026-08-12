@@ -13,7 +13,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/github/**").permitAll()
+                        .requestMatchers("/api/github/**", "/api/metrics/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

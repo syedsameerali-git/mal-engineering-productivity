@@ -1,0 +1,72 @@
+package mal_productivity.service;
+
+import mal_productivity.client.GitHubClient;
+import mal_productivity.dto.GitHubPullRequest;
+import mal_productivity.dto.GitHubWorkflowRun;
+import mal_productivity.dto.ProductivityMetrics;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.List;
+
+@Service
+public class ProductivityMetricsService {
+
+    private final GitHubClient gitHubClient;
+
+    public ProductivityMetricsService(GitHubClient gitHubClient) {
+        this.gitHubClient = gitHubClient;
+    }
+
+    public ProductivityMetrics calculate(String owner, String repo) {
+
+        List<GitHubPullRequest> pullRequests =
+                gitHubClient.getPullRequests(owner, repo);
+
+        List<GitHubWorkflowRun> workflowRuns =
+                gitHubClient.getWorkflowRuns(owner, repo);
+
+        OffsetDateTime sevenDaysAgo = OffsetDateTime.now().minusDays(7);
+
+        long deployments = workflowRuns.stream()
+                .filter(run -> "completed".equals(run.status()))
+                .filter(run -> "success".equals(run.conclusion()))
+                .filter(run -> run.updatedAt() != null)
+                .filter(run -> run.updatedAt().isAfter(sevenDaysAgo))
+                .count();
+
+        List<GitHubPullRequest> mergedPrs = pullRequests.stream()
+                .filter(pr -> pr.mergedAt() != null)
+                .toList();
+
+        double averageLeadTime = mergedPrs.stream()
+                .filter(pr -> pr.createdAt() != null)
+                .mapToLong(pr ->
+                        Duration.between(pr.createdAt(), pr.mergedAt()).toMinutes())
+                .average()
+                .orElse(0.0) / 60.0;
+
+        double averageReviewTime = mergedPrs.stream()
+                .filter(pr -> pr.createdAt() != null && pr.updatedAt() != null)
+                .mapToLong(pr ->
+                        Duration.between(pr.createdAt(), pr.updatedAt()).toMinutes())
+                .average()
+                .orElse(0.0) / 60.0;
+
+        long mergedLast7Days = mergedPrs.stream()
+                .filter(pr -> pr.mergedAt().isAfter(sevenDaysAgo))
+                .count();
+
+        return new ProductivityMetrics(
+                deployments,
+                round(averageLeadTime),
+                round(averageReviewTime),
+                mergedLast7Days
+        );
+    }
+
+    private double round(double value) {
+        return Math.round(value * 10.0) / 10.0;
+    }
+}

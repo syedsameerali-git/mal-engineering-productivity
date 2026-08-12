@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 
-const API = "http://localhost:8080";
+const API = "https://mal-engineering-productivity-api.onrender.com";
 
 function App() {
   const [dashboard, setDashboard] = useState(null);
@@ -153,12 +153,12 @@ function MetricGrid({ metrics }) {
         type="DORA"
       />
 
-<MetricCard
-  title="CI Success Rate"
-  value={metrics.ciSuccessRate}
-  unit="% of completed runs"
-  type="QUALITY"
-/>
+      <MetricCard
+        title="CI Success Rate"
+        value={metrics.ciSuccessRate}
+        unit="% of completed runs"
+        type="QUALITY"
+      />
 
       <MetricCard
         title="PR Throughput"

@@ -13,24 +13,59 @@ function App() {
     setError("");
     setLoading(true);
 
-    const endpoint =
-      selectedRole === "lead"
-        ? "/api/dashboard/engineering"
-        : "/api/dashboard/executive";
+    const headers = {
+      Authorization: "Basic " + btoa(`${username}:${password}`),
+    };
 
     try {
-      const response = await fetch(
-        `${API}${endpoint}?owner=spring-projects&repo=spring-petclinic`,
-        {
-          headers: {
-            Authorization: "Basic " + btoa(`${username}:${password}`),
-          },
-        },
-      );
+      if (selectedRole === "lead") {
+        const response = await fetch(
+          `${API}/api/dashboard/engineering?owner=spring-projects&repo=spring-petclinic`,
+          { headers },
+        );
 
-      if (!response.ok) throw new Error();
+        if (!response.ok) throw new Error();
 
-      setDashboard(await response.json());
+        setDashboard(await response.json());
+      } else {
+        // CEO view: load two squads concurrently
+        const [petClinicResponse, securityResponse] = await Promise.all([
+          fetch(
+            `${API}/api/dashboard/executive?owner=spring-projects&repo=spring-petclinic`,
+            { headers },
+          ),
+          fetch(
+            `${API}/api/dashboard/executive?owner=spring-projects&repo=spring-security`,
+            { headers },
+          ),
+        ]);
+
+        if (!petClinicResponse.ok || !securityResponse.ok) {
+          throw new Error();
+        }
+
+        const [petClinic, springSecurity] = await Promise.all([
+          petClinicResponse.json(),
+          securityResponse.json(),
+        ]);
+
+        setDashboard({
+          audience: "CEO Office",
+          squads: [
+            {
+              name: "Squad A",
+              repository: "spring-projects/spring-petclinic",
+              metrics: petClinic.deliveryHealth,
+            },
+            {
+              name: "Squad B",
+              repository: "spring-projects/spring-security",
+              metrics: springSecurity.deliveryHealth,
+            },
+          ],
+        });
+      }
+
       setRole(selectedRole);
     } catch {
       setError("Unable to load the dashboard. Please try again.");
@@ -139,55 +174,35 @@ function EngineeringView({ data }) {
 }
 
 function ExecutiveView({ data }) {
-  const metrics = data.deliveryHealth;
-
   return (
     <>
       <div className="executive-note">
-        <strong>Executive delivery overview:</strong> Aggregated engineering
-        health focused on delivery speed and reliability. Individual engineer
-        activity and repository-level detail are intentionally excluded.
+        <strong>Organisation delivery overview:</strong> 2 engineering squads
+        reporting from live GitHub data. Individual engineer activity is
+        intentionally excluded.
       </div>
 
-      <section className="metric-grid executive-metrics">
-        <MetricCard
-          title="Delivery Pace"
-          value={metrics.deploymentsLast7Days}
-          unit="production deployments / 7 days"
-          type="DELIVERY"
-        />
+      {data.squads.map((squad) => (
+        <section className="ceo-squad" key={squad.name}>
+          <div className="ceo-squad-title">
+            <div>
+              <span className="squad-label">ENGINEERING SQUAD</span>
+              <div className="repo-name">{squad.name}</div>
+              <div className="repo-name">{squad.repository}</div>
+            </div>
 
-        <MetricCard
-          title="Change Lead Time"
-          value={metrics.averageLeadTimeHours}
-          unit="hours to deliver change"
-          type="VELOCITY"
-        />
+            <span className="live-badge">Live GitHub data</span>
+          </div>
 
-        <MetricCard
-          title="Build Health"
-          value={`${metrics.ciSuccessRate}%`}
-          unit="successful CI runs"
-          type="RELIABILITY"
-        />
-      </section>
+          <MetricGrid metrics={squad.metrics} />
+        </section>
+      ))}
 
       <div className="source">
-        <strong>Executive scope:</strong> Organisation-level delivery signals.
-        No individual engineer activity is exposed.
+        <strong>Executive scope:</strong> Squad-level delivery health only. No
+        individual engineer activity is exposed.
       </div>
     </>
-  );
-}
-
-function ExecutiveMetric({ label, value, unit, detail }) {
-  return (
-    <article className="executive-metric">
-      <span className="executive-label">{label}</span>
-      <div className="executive-value">{value}</div>
-      <div className="executive-unit">{unit}</div>
-      <p>{detail}</p>
-    </article>
   );
 }
 

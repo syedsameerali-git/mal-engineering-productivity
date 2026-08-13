@@ -79,36 +79,50 @@ function App() {
   }
 
   return (
-    <div className="dashboard">
-      <header>
-        <div>
-          <h1>Engineering Productivity</h1>
-          <p>
-            {role === "lead"
-              ? "Squad delivery health and engineering flow"
-              : "Organisation-level engineering health"}
-          </p>
-        </div>
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="header-inner">
+          <div className="brand-row">
+            <span className="brand-mark">M</span>
+            <div>
+              <h1>Engineering Productivity</h1>
+              <p>Delivery intelligence from live engineering signals</p>
+            </div>
+          </div>
 
-        <div>
-          <span className="badge">{dashboard.audience}</span>
-          <button
-            className="logout"
-            onClick={() => {
-              setDashboard(null);
-              setRole(null);
-            }}
-          >
-            Sign out
-          </button>
+          <div className="header-actions">
+            <span className="audience-badge">{dashboard.audience}</span>
+            <button
+              className="logout"
+              onClick={() => {
+                setDashboard(null);
+                setRole(null);
+                setError("");
+              }}
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
-      {role === "lead" ? (
-        <EngineeringView data={dashboard} />
-      ) : (
-        <ExecutiveView data={dashboard} />
-      )}
+      <main className="dashboard">
+        {role === "lead" ? (
+          <EngineeringView data={dashboard} />
+        ) : (
+          <ExecutiveView data={dashboard} />
+        )}
+      </main>
+
+      <footer className="app-footer">
+        <div className="footer-inner">
+          <span>Engineering Productivity MVP</span>
+          <span className="footer-live">
+            <span className="live-dot" />
+            Live GitHub data
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -116,58 +130,108 @@ function App() {
 function Login({ login, error, loading }) {
   return (
     <div className="login-page">
-      <div className="login-card">
-        <h1>Engineering Productivity</h1>
-        <p className="login-subtitle">
-          Live engineering delivery metrics from GitHub. Select an audience to
-          explore the demo.
-        </p>
-        <button
-          disabled={loading}
-          onClick={() => login("lead", "lead-demo", "lead")}
-        >
-          Engineering Lead
-        </button>
+      <div className="login-layout">
+        <section className="login-intro">
+          <span className="eyebrow">ENGINEERING INTELLIGENCE</span>
+          <h1>Turn delivery signals into clearer decisions.</h1>
+          <p>Live GitHub metrics tailored to the people using them:</p>
+          <p>1. Operational detail for engineering leads</p>
+          <p>2. Multi-squad visibility for executives.</p>
 
-        <button
-          disabled={loading}
-          onClick={() => login("executive", "executive-demo", "executive")}
-        >
-          CEO Office
-        </button>
-
-        {loading && (
-          <div className="loading-state">
-            <span className="spinner"></span>
-            Loading live engineering metrics...
+          <div className="login-features">
+            <span>Live GitHub signals</span>
+            <span>Role-based views</span>
+            <span>DORA + flow metrics</span>
           </div>
-        )}
+        </section>
 
-        {error && <p className="error">{error}</p>}
+        <section className="login-card">
+          <div className="login-card-heading">
+            <span className="brand-mark">M</span>
+            <div>
+              <h2>Explore the dashboard</h2>
+              <p>Choose an audience to enter the live demo.</p>
+            </div>
+          </div>
 
-        <small className="security-note">
-          🔒 Each audience uses separate credentials and server-side role-based
-          access control.
-        </small>
+          <button
+            className="role-button"
+            disabled={loading}
+            onClick={() => login("lead", "lead-demo", "lead")}
+          >
+            <span className="role-icon">EL</span>
+            <span className="role-copy">
+              <strong>Engineering Lead</strong>
+              <small>Squad-level delivery and flow metrics</small>
+            </span>
+            <span className="role-arrow">→</span>
+          </button>
+
+          <button
+            className="role-button"
+            disabled={loading}
+            onClick={() => login("executive", "executive-demo", "executive")}
+          >
+            <span className="role-icon">CEO</span>
+            <span className="role-copy">
+              <strong>CEO Office</strong>
+              <small>Organisation-level multi-squad health</small>
+            </span>
+            <span className="role-arrow">→</span>
+          </button>
+
+          {loading && (
+            <div className="loading-state">
+              <span className="spinner" />
+              <div>
+                <strong>Loading live metrics</strong>
+                <small>The hosted API may take a moment to wake up.</small>
+              </div>
+            </div>
+          )}
+
+          {error && <p className="error">{error}</p>}
+
+          <div className="security-note">
+            <span className="security-dot" />
+            Separate credentials and server-side role-based access control.
+          </div>
+        </section>
       </div>
     </div>
   );
 }
 
 function EngineeringView({ data }) {
-  const metrics = data.metrics;
-
   return (
     <>
-      <div className="context">
-        <strong>Squad source:</strong> {data.repository}
-      </div>
+      <section className="page-heading">
+        <div>
+          <span className="eyebrow">ENGINEERING LEAD VIEW</span>
+          <h2>Squad delivery health</h2>
+          <p>
+            Operational signals for delivery speed, reliability and engineering
+            flow.
+          </p>
+        </div>
+        <span className="live-pill">
+          <span className="live-dot" />
+          Live
+        </span>
+      </section>
 
-      <MetricGrid metrics={metrics} />
+      <section className="repository-strip">
+        <span>Repository</span>
+        <strong>{data.repository}</strong>
+      </section>
 
-      <div className="source">
-        <strong>Live source data:</strong> GitHub Pull Requests + Deployments +
-        GitHub Actions
+      <MetricGrid metrics={data.metrics} />
+
+      <div className="data-note">
+        <strong>Source signals</strong>
+        <span>GitHub Pull Requests</span>
+        <span>Deployments</span>
+        <span>GitHub Actions</span>
       </div>
     </>
   );
@@ -176,31 +240,78 @@ function EngineeringView({ data }) {
 function ExecutiveView({ data }) {
   return (
     <>
-      <div className="executive-note">
-        <strong>Organisation delivery overview:</strong> 2 engineering squads
-        reporting from live GitHub data. Individual engineer activity is
-        intentionally excluded.
-      </div>
+      <section className="page-heading">
+        <div>
+          <span className="eyebrow">CEO OFFICE VIEW</span>
+          <h2>Organisation delivery health</h2>
+          <p>
+            Two engineering squads, one concise view of delivery performance.
+          </p>
+        </div>
 
-      {data.squads.map((squad) => (
-        <section className="ceo-squad" key={squad.name}>
-          <div className="ceo-squad-title">
-            <div>
-              <span className="squad-label">ENGINEERING SQUAD</span>
-              <div className="repo-name">{squad.name}</div>
-              <div className="repo-name">{squad.repository}</div>
+        <div className="reporting-pill">
+          <strong>{data.squads.length}</strong>
+          <span>squads reporting</span>
+        </div>
+      </section>
+
+      <section className="executive-panel">
+        {data.squads.map((squad, index) => (
+          <div className="squad-row" key={squad.name}>
+            <div className="squad-identity">
+              <div className="squad-name-line">
+                <h3>{squad.name}</h3>
+                <span className="live-pill compact">
+                  <span className="live-dot" />
+                  Live
+                </span>
+              </div>
+              <code>{squad.repository}</code>
             </div>
 
-            <span className="live-badge">Live GitHub data</span>
+            <div className="squad-metrics">
+              <CompactMetric
+                label="Deployment Frequency"
+                value={squad.metrics.deploymentsLast7Days}
+                unit="/ 7 days"
+                tone="blue"
+              />
+              <CompactMetric
+                label="Lead Time"
+                value={squad.metrics.averageLeadTimeHours}
+                unit="hours"
+                tone="purple"
+              />
+              <CompactMetric
+                label="CI Success"
+                value={`${squad.metrics.ciSuccessRate}%`}
+                unit="completed runs"
+                tone="green"
+              />
+              <CompactMetric
+                label="PR Throughput"
+                value={squad.metrics.mergedPullRequestsLast7Days}
+                unit="merged / 7 days"
+                tone="amber"
+              />
+            </div>
+
+            {index < data.squads.length - 1 && (
+              <div className="squad-divider" />
+            )}
           </div>
+        ))}
+      </section>
 
-          <MetricGrid metrics={squad.metrics} />
-        </section>
-      ))}
-
-      <div className="source">
-        <strong>Executive scope:</strong> Squad-level delivery health only. No
-        individual engineer activity is exposed.
+      <div className="privacy-note">
+        <span className="privacy-icon">✓</span>
+        <div>
+          <strong>Privacy by design</strong>
+          <p>
+            Executive reporting stays at squad level. Individual engineer
+            activity is intentionally excluded.
+          </p>
+        </div>
       </div>
     </>
   );
@@ -214,43 +325,53 @@ function MetricGrid({ metrics }) {
         value={metrics.deploymentsLast7Days}
         unit="successful deployments / 7 days"
         type="DORA"
+        tone="blue"
       />
-
       <MetricCard
         title="Lead Time for Changes"
         value={metrics.averageLeadTimeHours}
         unit="hours"
         type="DORA"
+        tone="purple"
       />
-
       <MetricCard
         title="CI Success Rate"
-        value={metrics.ciSuccessRate}
-        unit="% of completed runs"
+        value={`${metrics.ciSuccessRate}%`}
+        unit="of completed runs"
         type="QUALITY"
+        tone="green"
       />
-
       <MetricCard
         title="PR Throughput"
         value={metrics.mergedPullRequestsLast7Days}
         unit="merged / 7 days"
         type="FLOW"
+        tone="amber"
       />
     </section>
   );
 }
 
-function MetricCard({ title, value, unit, type }) {
+function MetricCard({ title, value, unit, type, tone }) {
   return (
-    <article className="metric-card">
+    <article className={`metric-card tone-${tone}`}>
       <div className="metric-heading">
         <span>{title}</span>
         <small>{type}</small>
       </div>
-
       <div className="metric-value">{value}</div>
       <div className="metric-unit">{unit}</div>
     </article>
+  );
+}
+
+function CompactMetric({ label, value, unit, tone }) {
+  return (
+    <div className={`compact-metric tone-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{unit}</small>
+    </div>
   );
 }
 

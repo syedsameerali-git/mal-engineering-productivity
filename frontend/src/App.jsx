@@ -7,9 +7,11 @@ function App() {
   const [dashboard, setDashboard] = useState(null);
   const [role, setRole] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function login(username, password, selectedRole) {
     setError("");
+    setLoading(true);
 
     const endpoint =
       selectedRole === "lead"
@@ -23,7 +25,7 @@ function App() {
           headers: {
             Authorization: "Basic " + btoa(`${username}:${password}`),
           },
-        }
+        },
       );
 
       if (!response.ok) throw new Error();
@@ -31,12 +33,14 @@ function App() {
       setDashboard(await response.json());
       setRole(selectedRole);
     } catch {
-      setError("Invalid credentials or insufficient access.");
+      setError("Unable to load the dashboard. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
   if (!dashboard) {
-    return <Login login={login} error={error} />;
+    return <Login login={login} error={error} loading={loading} />;
   }
 
   return (
@@ -74,30 +78,42 @@ function App() {
   );
 }
 
-function Login({ login, error }) {
+function Login({ login, error, loading }) {
   return (
     <div className="login-page">
       <div className="login-card">
         <h1>Engineering Productivity</h1>
-        <p>Choose a demo audience to access the platform.</p>
-
+        <p className="login-subtitle">
+          Live engineering delivery metrics from GitHub. Select an audience to
+          explore the demo.
+        </p>
         <button
+          disabled={loading}
           onClick={() => login("lead", "lead-demo", "lead")}
         >
           Engineering Lead
         </button>
 
         <button
-          onClick={() =>
-            login("executive", "executive-demo", "executive")
-          }
+          disabled={loading}
+          onClick={() => login("executive", "executive-demo", "executive")}
         >
           CEO Office
         </button>
 
+        {loading && (
+          <div className="loading-state">
+            <span className="spinner"></span>
+            Loading live engineering metrics...
+          </div>
+        )}
+
         {error && <p className="error">{error}</p>}
 
-        <small>Access is enforced by backend role-based security.</small>
+        <small className="security-note">
+          🔒 Each audience uses separate credentials and server-side role-based
+          access control.
+        </small>
       </div>
     </div>
   );
@@ -115,7 +131,8 @@ function EngineeringView({ data }) {
       <MetricGrid metrics={metrics} />
 
       <div className="source">
-        <strong>Ground truth:</strong> GitHub Pull Requests + GitHub Actions
+        <strong>Live source data:</strong> GitHub Pull Requests + Deployments +
+        GitHub Actions
       </div>
     </>
   );

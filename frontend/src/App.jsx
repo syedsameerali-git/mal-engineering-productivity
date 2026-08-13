@@ -144,12 +144,50 @@ function ExecutiveView({ data }) {
   return (
     <>
       <div className="executive-note">
-        Aggregated engineering health. Individual engineer activity is
-        intentionally excluded.
+        <strong>Executive delivery overview:</strong> Aggregated engineering
+        health focused on delivery speed and reliability. Individual engineer
+        activity and repository-level detail are intentionally excluded.
       </div>
 
-      <MetricGrid metrics={metrics} />
+      <section className="metric-grid executive-metrics">
+        <MetricCard
+          title="Delivery Pace"
+          value={metrics.deploymentsLast7Days}
+          unit="production deployments / 7 days"
+          type="DELIVERY"
+        />
+
+        <MetricCard
+          title="Change Lead Time"
+          value={metrics.averageLeadTimeHours}
+          unit="hours to deliver change"
+          type="VELOCITY"
+        />
+
+        <MetricCard
+          title="Build Health"
+          value={`${metrics.ciSuccessRate}%`}
+          unit="successful CI runs"
+          type="RELIABILITY"
+        />
+      </section>
+
+      <div className="source">
+        <strong>Executive scope:</strong> Organisation-level delivery signals.
+        No individual engineer activity is exposed.
+      </div>
     </>
+  );
+}
+
+function ExecutiveMetric({ label, value, unit, detail }) {
+  return (
+    <article className="executive-metric">
+      <span className="executive-label">{label}</span>
+      <div className="executive-value">{value}</div>
+      <div className="executive-unit">{unit}</div>
+      <p>{detail}</p>
+    </article>
   );
 }
 

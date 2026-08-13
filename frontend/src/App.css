@@ -164,6 +164,26 @@ button {
   opacity: 0.55;
 }
 
+.demo-notice {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fffaeb;
+  color: #854a0e;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.demo-notice strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #93370d;
+}
+
+.demo-notice span {
+  color: #935f19;
+}
+
 .role-icon {
   width: 42px;
   height: 42px;

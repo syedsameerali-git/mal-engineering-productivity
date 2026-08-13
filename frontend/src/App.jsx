@@ -180,6 +180,14 @@ function Login({ login, error, loading }) {
             <span className="role-arrow">→</span>
           </button>
 
+          <div className="demo-notice">
+            <strong>Demo environment</strong>
+            <span>
+              The backend may sleep after inactivity. The first request can take
+              up to a minute while the service wakes up.
+            </span>
+          </div>
+
           {loading && (
             <div className="loading-state">
               <span className="spinner" />

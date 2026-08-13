@@ -290,7 +290,7 @@ The target production architecture evolves the MVP from synchronous
 source-API reads toward event-driven ingestion, normalized event storage,
 historical metric snapshots, and scoped RBAC.
 
-![Target Platform Architecture](docs/architecture.png)
+![Target Platform Architecture](docs/Mal_Engineering_Productivity.png)
 
 The editable draw.io source is available at
 `docs/architecture.drawio`.

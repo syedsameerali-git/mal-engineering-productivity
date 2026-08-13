@@ -27,11 +27,17 @@ based on audience.
 
 Data flow:
 
-GitHub Pull Requests ─┐
-                      ├──> Spring Boot Metrics Engine ──> Secured APIs ──> React Dashboard
-GitHub Deployments ───┤
-                      │
-GitHub Actions ───────┘
+GitHub Pull Requests
+GitHub Deployments
+GitHub Actions
+        ↓
+Spring Boot Ingestion & Metrics Engine
+        ↓
+Spring Security / Role-Based APIs
+        ↓
+React Dashboard
+        ↓
+Engineering Lead / CEO Office
 
 The MVP deliberately measures teams and delivery systems rather than
 ranking individual engineers.
@@ -63,25 +69,21 @@ productivity metrics are manually entered.
 
 ## Metrics
 
-  -----------------------------------------------------------------------
-  Metric                  Type                    MVP Calculation
-  ----------------------- ----------------------- -----------------------
-  Deployment Frequency    DORA                    GitHub deployment
-                                                  events created during
-                                                  the previous 7 days
+Deployment Frequency — DORA
+Source: GitHub Deployments
+Calculation: Number of GitHub deployment events during the previous 7 days.
 
-  Lead Time for Changes   DORA                    Average elapsed time
-                                                  from PR creation to
-                                                  merge
+Lead Time for Changes — DORA
+Source: GitHub Pull Requests
+Calculation: Average elapsed time from PR creation to PR merge.
 
-  PR Throughput           Flow                    Number of merged PRs
-                                                  during the previous 7
-                                                  days
+PR Throughput — Flow
+Source: GitHub Pull Requests
+Calculation: Number of pull requests merged during the previous 7 days.
 
-  CI Success Rate         Quality                 Successful completed
-                                                  GitHub Actions runs /
-                                                  total completed runs
-  -----------------------------------------------------------------------
+CI Success Rate — Quality
+Source: GitHub Actions
+Calculation: Successful completed workflow runs divided by all completed workflow runs × 100.
 
 ### Metric Design Notes
 

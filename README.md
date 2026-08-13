@@ -25,19 +25,21 @@ The platform ingests live engineering data, computes productivity and
 delivery-health metrics, and exposes different levels of information
 based on audience.
 
-Data flow:
+### Data Flow
 
-GitHub Pull Requests
-GitHub Deployments
-GitHub Actions
-        ↓
-Spring Boot Ingestion & Metrics Engine
-        ↓
-Spring Security / Role-Based APIs
-        ↓
-React Dashboard
-        ↓
-Engineering Lead / CEO Office
+```text
+GitHub Pull Requests ─────┐
+GitHub Deployments ───────┼──► Spring Boot Ingestion & Metrics Engine
+GitHub Actions ───────────┘                  │
+                                             ▼
+                              Spring Security / RBAC APIs
+                                             │
+                                             ▼
+                                    React Dashboard
+                                      ┌──────┴──────┐
+                                      ▼             ▼
+                              Engineering Lead   CEO Office
+```
 
 The MVP deliberately measures teams and delivery systems rather than
 ranking individual engineers.

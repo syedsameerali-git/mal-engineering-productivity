@@ -9,7 +9,7 @@ Assessment.
 
 ## Live Demo
 
-Frontend: `https://vercel.com/syed-sameer-ali/mal-engineering-productivity`{=html}
+Frontend: `https://mal-engineering-productivity.vercel.app/`{=html}
 
 The application provides demo access for two roles:
 
@@ -18,6 +18,10 @@ The application provides demo access for two roles:
     engineer activity
 
 Role access is enforced server-side using Spring Security RBAC.
+
+> **Demo environment:** The backend is hosted on a free Render instance
+> and may sleep after inactivity. The first dashboard request can therefore
+> take up to a minute while the service wakes up.
 
 ## What This MVP Demonstrates
 
@@ -62,9 +66,18 @@ Used to derive:
 
 -   CI Success Rate
 
-The public demo currently uses the `spring-projects/spring-petclinic`
-repository so reviewers can inspect metrics derived from real
-engineering activity.
+The public demo currently uses below repos:
+
+Engineering Lead view:
+→ `spring-projects/spring-petclinic`
+
+CEO Office view:
+→ `spring-projects/spring-petclinic`
+→ `spring-projects/spring-security`
+
+These repositories act as two example engineering squads. The executive
+view presents squad-level delivery health while deliberately excluding
+individual engineer activity.
 
 All four displayed metrics are computed from source-system data. No
 productivity metrics are manually entered.
@@ -116,12 +129,11 @@ Provides operational squad-level context including:
 
 ### CEO Office
 
-Provides an aggregated delivery-health view.
+Provides an organization-level delivery-health view across multiple squads.
 
-Individual engineer activity and raw repository details are
-intentionally excluded from the executive view. The goal is to support
-organizational decisions without turning engineering telemetry into
-individual performance surveillance.
+Individual engineer activity is intentionally excluded from the executive
+view. Repository identity is shown only to establish squad/source context;
+no engineer-level activity is exposed.
 
 ## Access Control
 
@@ -271,3 +283,14 @@ At organizational scale, I would evolve the MVP toward:
 The central principle remains unchanged: measure delivery systems and
 outcomes from ground-truth source data, while avoiding individual
 productivity scoring.
+
+## Architecture
+
+The target production architecture evolves the MVP from synchronous
+source-API reads toward event-driven ingestion, normalized event storage,
+historical metric snapshots, and scoped RBAC.
+
+![Target Platform Architecture](docs/architecture.png)
+
+The editable draw.io source is available at
+`docs/architecture.drawio`.

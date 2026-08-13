@@ -1,0 +1,269 @@
+# Engineering Productivity Platform --- MVP
+
+A working engineering productivity platform that turns live
+engineering-system data into objective delivery-health metrics for two
+audiences: Engineering Leads and the CEO Office.
+
+Built as part of the Mal Engineering Productivity Lead Design & Build
+Assessment.
+
+## Live Demo
+
+Frontend: `https://vercel.com/syed-sameer-ali/mal-engineering-productivity`{=html}
+
+The application provides demo access for two roles:
+
+-   Engineering Lead --- squad-level delivery metrics
+-   CEO Office --- aggregated engineering health without individual
+    engineer activity
+
+Role access is enforced server-side using Spring Security RBAC.
+
+## What This MVP Demonstrates
+
+The platform ingests live engineering data, computes productivity and
+delivery-health metrics, and exposes different levels of information
+based on audience.
+
+Data flow:
+
+GitHub Pull Requests ─┐
+                      ├──> Spring Boot Metrics Engine ──> Secured APIs ──> React Dashboard
+GitHub Deployments ───┤
+                      │
+GitHub Actions ───────┘
+
+The MVP deliberately measures teams and delivery systems rather than
+ranking individual engineers.
+
+## Data Sources
+
+The application consumes live data from two source-system categories.
+
+### GitHub Pull Requests and Deployments
+
+Used to derive:
+
+-   Lead Time for Changes
+-   Deployment Frequency
+-   PR Throughput
+
+### GitHub Actions
+
+Used to derive:
+
+-   CI Success Rate
+
+The public demo currently uses the `spring-projects/spring-petclinic`
+repository so reviewers can inspect metrics derived from real
+engineering activity.
+
+All four displayed metrics are computed from source-system data. No
+productivity metrics are manually entered.
+
+## Metrics
+
+  -----------------------------------------------------------------------
+  Metric                  Type                    MVP Calculation
+  ----------------------- ----------------------- -----------------------
+  Deployment Frequency    DORA                    GitHub deployment
+                                                  events created during
+                                                  the previous 7 days
+
+  Lead Time for Changes   DORA                    Average elapsed time
+                                                  from PR creation to
+                                                  merge
+
+  PR Throughput           Flow                    Number of merged PRs
+                                                  during the previous 7
+                                                  days
+
+  CI Success Rate         Quality                 Successful completed
+                                                  GitHub Actions runs /
+                                                  total completed runs
+  -----------------------------------------------------------------------
+
+### Metric Design Notes
+
+A successful CI run is deliberately **not** treated as a deployment.
+Deployment Frequency uses GitHub Deployment events instead.
+
+The MVP Lead Time for Changes calculation uses PR creation-to-merge as a
+practical approximation. A production implementation would correlate
+commit SHAs with successful production deployments to measure
+commit-to-production lead time.
+
+Metrics are presented at team/repository level rather than as individual
+engineer rankings. This reduces incentives to game activity metrics such
+as commit counts or lines of code.
+
+## Audience Views
+
+### Engineering Lead
+
+Provides operational squad-level context including:
+
+-   repository/squad source
+-   deployment frequency
+-   lead time
+-   PR throughput
+-   CI success rate
+-   underlying source-system context
+
+### CEO Office
+
+Provides an aggregated delivery-health view.
+
+Individual engineer activity and raw repository details are
+intentionally excluded from the executive view. The goal is to support
+organizational decisions without turning engineering telemetry into
+individual performance surveillance.
+
+## Access Control
+
+Access control is enforced in the Spring Boot backend using Spring
+Security.
+
+Two roles are defined for the assessment demo:
+
+-   `ENGINEERING_LEAD`
+-   `EXECUTIVE`
+
+Each role is authorized for its own API endpoint. Cross-role access
+returns HTTP `403 Forbidden`.
+
+The frontend's audience-selection buttons provide frictionless reviewer
+access, but authorization is still enforced server-side rather than
+through frontend routing alone.
+
+For production, the demo authentication mechanism would be replaced with
+enterprise SSO using OIDC/OAuth 2.0, with identity-provider-managed
+users and role/group mapping.
+
+## Technology Stack
+
+### Backend
+
+-   Java 17
+-   Spring Boot
+-   Spring Security
+-   Spring REST Client
+-   Maven
+
+### Frontend
+
+-   React
+-   Vite
+
+### Infrastructure
+
+-   Render --- backend
+-   Vercel --- frontend
+-   GitHub --- source control and live engineering data
+
+## Security
+
+-   Role-based authorization is enforced server-side.
+-   GitHub API credentials are not stored in source control.
+-   The deployed backend receives its GitHub token through an
+    environment variable.
+-   The GitHub integration is read-only.
+-   CORS restricts browser access to approved development and Vercel
+    origins.
+-   Executive views deliberately exclude individual engineer data.
+
+## Local Setup
+
+### Prerequisites
+
+-   Java 17+
+-   Node.js 22+
+-   Git
+
+### Backend
+
+From the repository root:
+
+``` bash
+./mvnw spring-boot:run
+```
+
+The backend runs on:
+
+``` text
+http://localhost:8080
+```
+
+A GitHub token can optionally be supplied to avoid unauthenticated API
+rate limits:
+
+``` bash
+export GITHUB_TOKEN=<your-token>
+```
+
+Never commit the token to source control.
+
+### Frontend
+
+``` bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend runs on:
+
+``` text
+http://localhost:5173
+```
+
+## Live vs Seeded Data
+
+**Live data:**
+
+-   GitHub pull requests
+-   GitHub deployment events
+-   GitHub Actions workflow runs
+-   all four dashboard metric calculations
+
+**Seeded data:**
+
+-   None
+
+Because the public demo repository may have little activity in the
+current 7-day window, zero values are valid source-derived results
+rather than synthetic values inserted to make the dashboard appear
+active.
+
+## Known Limitation
+
+The MVP computes metrics synchronously from the GitHub API when the
+dashboard is requested.
+
+This is appropriate for demonstrating the complete
+ingestion-to-dashboard flow, but it would not be the architecture used
+across eight squads at production scale.
+
+The next improvement would be asynchronous ingestion with persisted
+metric snapshots and caching. Source-system events would be collected
+incrementally, normalized into a common data model, and queried from the
+platform's own datastore rather than repeatedly querying upstream APIs
+during dashboard requests.
+
+## Production Evolution
+
+At organizational scale, I would evolve the MVP toward:
+
+1.  asynchronous/event-driven source ingestion
+2.  normalized engineering-event storage
+3.  scheduled and incremental metric computation
+4.  historical snapshots for 7/14/28-day trends
+5.  SSO/OIDC-based authentication
+6.  configurable squad and source-system mappings
+7.  audit logging and fine-grained authorization
+8.  extensible domain adapters for functions such as Risk, Operations,
+    and Marketing
+
+The central principle remains unchanged: measure delivery systems and
+outcomes from ground-truth source data, while avoiding individual
+productivity scoring.
